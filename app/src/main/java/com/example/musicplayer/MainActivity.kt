@@ -1,6 +1,7 @@
 package com.example.musicplayer
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -11,6 +12,12 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.model.Song
+import android.content.ComponentName
+import android.content.Context
+import com.example.musicplayer.MusicService.MusicBinder
+import android.os.IBinder
+import android.content.ServiceConnection
+import android.view.View
 
 
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
@@ -24,6 +31,26 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private lateinit var myRecyclerView: RecyclerView
     private lateinit var myRecyclerAdapter: SongRecyclerAdapter
     private lateinit var myRecyclerLayoutManager: LinearLayoutManager
+
+    private lateinit var myMusicService: MusicService
+    private lateinit var playIntent: Intent
+    private var musicBound: Boolean = false
+
+    //connect to the service
+    private val musicConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            //get service
+            myMusicService = (service as MusicBinder).service
+            //pass list
+            myMusicService.songList =  songList
+            musicBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            musicBound = false
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,6 +68,17 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             adapter = myRecyclerAdapter
             addItemDecoration(DividerItemDecoration(this.context, DividerItemDecoration.VERTICAL))
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        Log.d(TAG, "onStart: before binding service")
+
+        playIntent = Intent(this, MusicService::class.java)
+        bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE)
+
+        startService(playIntent)
     }
 
     private fun checkForDataReadingPermission() {
@@ -71,10 +109,12 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         if (musicCursor.moveToFirst()) {
             //get columns
             val nameColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.DISPLAY_NAME)
+            val idColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID)
             //add songs to list
             do {
                 val thisName = musicCursor.getString(nameColumn)
-                songList.add(Song(thisName))
+                val thisId = musicCursor.getLong(idColumn)
+                songList.add(Song(thisId, thisName))
             } while (musicCursor.moveToNext())
         }
 
@@ -99,5 +139,10 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                 // Ignore all other requests.
             }
         }
+    }
+
+    fun songPicked(songIndex: Int) {
+        myMusicService.setSong(songIndex)
+        myMusicService.playSong()
     }
 }

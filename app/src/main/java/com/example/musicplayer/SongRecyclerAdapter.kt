@@ -1,5 +1,6 @@
 package com.example.musicplayer
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,13 @@ class SongRecyclerAdapter(private val songs: List<Song>): RecyclerView.Adapter<S
     }
 
     class SongViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+
+        init {
+            itemView.setOnClickListener {
+                (itemView.context as MainActivity).songPicked(adapterPosition)
+            }
+        }
+
         private val songName: TextView = itemView.findViewById(R.id.songName)
 
         fun bind(song: Song) {
