@@ -22,6 +22,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
 
     lateinit var songList: List<Song>
     private lateinit var player: MediaPlayer
+    lateinit var controller: MusicController
     private var songPosition: Int = 0
     private val binder = MusicBinder()
 
@@ -45,10 +46,11 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     override fun onPrepared(mp: MediaPlayer?) {
-        Log.d(TAG, "onPrepared")
+        Log.d(TAG, "onPrepared: start playing")
 
-        mp!!.start()
+        mp!!.start() //start playback
 
+        //prepare a notification about playback
         val pendingIntent: PendingIntent =
             Intent(this, MainActivity::class.java).let { notificationIntent ->
                 PendingIntent.getActivity(this, 0, notificationIntent, 0)
@@ -61,11 +63,12 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
             .setContentIntent(pendingIntent)
             .build()
 
-
         startForeground(PLAYER_NOTIFICATION_ID, notification)
+        controller.show(0)
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
+        Log.d(TAG, "onError")
         mp!!.reset()
         return false
     }
@@ -75,29 +78,31 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
 
         if(player.currentPosition > 0){
             mp!!.reset()
-            playNext()
+            setNext()
         }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
+        Log.d(TAG, "onBind")
         return binder
     }
 
     override fun onUnbind(intent: Intent): Boolean {
+        Log.d(TAG, "onUnbind")
         player.stop()
         player.release()
         return false
     }
 
     override fun onDestroy() {
-        Log.d(TAG, "onDestroy")
         super.onDestroy()
+        Log.d(TAG, "onDestroy")
         player.release()
         stopForeground(true)
     }
 
-    fun playSong() {
-        Log.d(TAG, "playSong: playing ${songList[songPosition].fileName}")
+    fun prepareSong() {
+        Log.d(TAG, "prepareSong: preparing ${songList[songPosition].fileName}")
 
         player.reset()
 
@@ -113,55 +118,52 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
             Log.e(TAG, "Error setting data source", e)
         }
 
-        player.prepareAsync()
+        player.prepare()
     }
 
     fun setSong(songIndex: Int) {
+        Log.d(TAG, "setSong: index $songIndex, name ${songList[songPosition].fileName}")
         songPosition = songIndex
     }
 
-    fun getCurrentSong(): Song {
-        return songList[songPosition]
-    }
-
-    fun getPosn(): Int {
+    fun getPosition(): Int {
         return player.currentPosition
     }
 
-    fun getDur(): Int {
+    fun getDuration(): Int {
         return player.duration
     }
 
-    fun isPng(): Boolean {
+    fun isPlaying(): Boolean {
         return player.isPlaying
     }
 
     fun pausePlayer() {
+        Log.d(TAG, "pausePlayer")
         player.pause()
     }
 
-    fun seek(posn: Int) {
-        player.seekTo(posn)
+    fun seek(position: Int) {
+        player.seekTo(position)
     }
 
-    fun go() {
+    fun start() {
         player.start()
     }
 
-    fun playPrev(){
+    fun setPrevious() {
         songPosition--
         if(songPosition < 0) {
             songPosition = songList.size - 1
         }
-        playSong()
+        prepareSong()
     }
 
-    //skip to next
-    fun playNext(){
+    fun setNext() {
         songPosition++
         if(songPosition >= songList.size) {
             songPosition = 0
         }
-        playSong()
+        prepareSong()
     }
 }
