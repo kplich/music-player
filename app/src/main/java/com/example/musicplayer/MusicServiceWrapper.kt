@@ -11,13 +11,13 @@ class MusicServiceWrapper(context: Context, attributes: AttributeSet?):
     init {
         setPrevNextListeners({myMusicService.playNext()},
             {myMusicService.playPrev()})
+        setAnchorView((context as MainActivity).findViewById(R.id.songsLayout))
         setMediaPlayer(this)
         isEnabled = true
     }
 
     companion object {
         private const val AUDIO_SESSION_ID = 17
-        private const val PLAYER_VIEW = R.id.songsLayout
     }
 
     lateinit var myMusicService: MusicService
@@ -69,7 +69,6 @@ class MusicServiceWrapper(context: Context, attributes: AttributeSet?):
 
     fun connectService(musicService: MusicService, songList: List<Song>) {
         this.myMusicService = musicService
-        setAnchorView((context as MainActivity).findViewById(PLAYER_VIEW))
         myMusicService.songList = songList
         isServiceBound = true
     }

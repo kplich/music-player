@@ -171,6 +171,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     fun songPicked(songIndex: Int) {
         musicServiceWrapper.myMusicService.setSong(songIndex)
         musicServiceWrapper.myMusicService.playSong()
-        musicServiceWrapper.show()
+        //musicServiceWrapper.show()
     }
 }
