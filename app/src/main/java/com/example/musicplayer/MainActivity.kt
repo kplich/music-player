@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.model.Song
 import android.content.Context
 
 
@@ -91,17 +90,26 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         val foundSongs: MutableList<Song> = mutableListOf()
         val musicResolver = contentResolver
         val musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-        val musicCursor = musicResolver.query(musicUri, null, null, null, null)!!
+
+        val columns = arrayOf(android.provider.MediaStore.Audio.Media._ID,
+            android.provider.MediaStore.Audio.Media.TITLE,
+            android.provider.MediaStore.Audio.Media.ARTIST)
+
+        val selectionClause = "${android.provider.MediaStore.Audio.AudioColumns.IS_MUSIC} = 1"
+
+        val musicCursor = musicResolver.query(musicUri, columns, selectionClause, null, null)!!
 
         if (musicCursor.moveToFirst()) {
             //get columns
-            val nameColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.DISPLAY_NAME)
             val idColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID)
+            val titleColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.TITLE)
+            val artistColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.ARTIST)
             //add songs to list
             do {
-                val thisName = musicCursor.getString(nameColumn)
                 val thisId = musicCursor.getLong(idColumn)
-                foundSongs.add(Song(thisId, thisName))
+                val thisTitle = musicCursor.getString(titleColumn)
+                val thisArtist = musicCursor.getString(artistColumn)
+                foundSongs.add(Song(thisId, thisTitle, thisArtist))
             } while (musicCursor.moveToNext())
         }
 

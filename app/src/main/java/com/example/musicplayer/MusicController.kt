@@ -6,7 +6,6 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
 import android.widget.MediaController
-import com.example.musicplayer.model.Song
 
 class MusicController(context: Context):
     MediaController.MediaPlayerControl, MediaController(context) {

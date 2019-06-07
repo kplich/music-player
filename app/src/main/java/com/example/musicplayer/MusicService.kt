@@ -11,7 +11,6 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.content.ContentUris
 import android.util.Log
-import com.example.musicplayer.model.Song
 
 class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
 
@@ -59,7 +58,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
         val notification: Notification = Notification.Builder(this, MainActivity.NOTIFICATION_CHANNEL_ID)
             .setContentTitle(getText(R.string.player_notification_title))
             .setSmallIcon(R.drawable.icon)
-            .setContentText(songList[songPosition].fileName)
+            .setContentText(songList[songPosition].title)
             .setContentIntent(pendingIntent)
             .build()
 
@@ -102,7 +101,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     fun prepareSong() {
-        Log.d(TAG, "prepareSong: preparing ${songList[songPosition].fileName}")
+        Log.d(TAG, "prepareSong: preparing ${songList[songPosition].title}")
 
         player.reset()
 
@@ -122,7 +121,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     fun setSong(songIndex: Int) {
-        Log.d(TAG, "setSong: index $songIndex, name ${songList[songPosition].fileName}")
+        Log.d(TAG, "setSong: index $songIndex, name ${songList[songPosition].title}")
         songPosition = songIndex
     }
 

@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.musicplayer.model.Song
 
 class SongRecyclerAdapter(private val songs: List<Song>): RecyclerView.Adapter<SongRecyclerAdapter.SongViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
@@ -34,7 +33,7 @@ class SongRecyclerAdapter(private val songs: List<Song>): RecyclerView.Adapter<S
         private val songName: TextView = itemView.findViewById(R.id.songName)
 
         fun bind(song: Song) {
-            songName.text = song.fileName
+            songName.text = song.title
         }
 
     }
