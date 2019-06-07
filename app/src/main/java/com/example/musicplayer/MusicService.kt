@@ -1,5 +1,7 @@
 package com.example.musicplayer
 
+import android.app.Notification
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.media.AudioManager
@@ -11,13 +13,23 @@ import android.content.ContentUris
 import android.util.Log
 import com.example.musicplayer.model.Song
 
-
 class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
+
+    companion object {
+        private const val TAG = "Music Service"
+        const val PLAYER_NOTIFICATION_ID = 53
+    }
 
     lateinit var songList: List<Song>
     private lateinit var player: MediaPlayer
     private var songPosition: Int = 0
-    private val musicBind = MusicBinder()
+    private val binder = MusicBinder()
+    private var serviceStarted = false
+
+    inner class MusicBinder : Binder() {
+        fun getService(): MusicService = this@MusicService
+
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -30,13 +42,26 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
         }
     }
 
-    inner class MusicBinder : Binder() {
-        internal val service: MusicService
-            get() = this@MusicService
-    }
-
     override fun onPrepared(mp: MediaPlayer?) {
         mp!!.start()
+
+        Log.d(TAG, "onPrepared: before creating notification")
+
+        val pendingIntent: PendingIntent =
+            Intent(this, MainActivity::class.java).let { notificationIntent ->
+                PendingIntent.getActivity(this, 0, notificationIntent, 0)
+            }
+
+        val notification: Notification = Notification.Builder(this, MainActivity.NOTIFICATION_CHANNEL_ID)
+            .setContentTitle(getText(R.string.player_notification_title))
+            .setSmallIcon(R.drawable.icon)
+            .setContentText(songList[songPosition].fileName)
+            .setContentIntent(pendingIntent)
+            .build()
+
+
+        startForeground(PLAYER_NOTIFICATION_ID, notification)
+
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
@@ -47,11 +72,12 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     override fun onCompletion(mp: MediaPlayer?) {
         if(player.currentPosition > 0){
             mp!!.reset()
+            playNext()
         }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
-        return musicBind
+        return binder
     }
 
     override fun onUnbind(intent: Intent): Boolean {
@@ -60,27 +86,74 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
         return false
     }
 
+    override fun onDestroy() {
+        stopForeground(true)
+    }
+
     fun playSong() {
         player.reset()
 
-        //get song
-        val playSong = songList[songPosition]
         //get id
-        val currSong = playSong.songId
+        val songToPlayId = songList[songPosition].songId
         //set uri
-        val trackUri = ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, currSong)
+        val trackUri = ContentUris.withAppendedId(android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            songToPlayId)
 
         try {
             player.setDataSource(applicationContext, trackUri)
         } catch (e: Exception) {
             Log.e("MUSIC SERVICE", "Error setting data source", e)
         }
+
         player.prepareAsync()
-
-
     }
 
     fun setSong(songIndex: Int) {
         songPosition = songIndex
+    }
+
+    fun getCurrentSong(): Song {
+        return songList[songPosition]
+    }
+
+    fun getPosn(): Int {
+        return player.currentPosition
+    }
+
+    fun getDur(): Int {
+        return player.duration
+    }
+
+    fun isPng(): Boolean {
+        return player.isPlaying
+    }
+
+    fun pausePlayer() {
+        player.pause()
+    }
+
+    fun seek(posn: Int) {
+        player.seekTo(posn)
+    }
+
+    fun go() {
+        player.start()
+    }
+
+    fun playPrev(){
+        songPosition--
+        if(songPosition < 0) {
+            songPosition = songList.size-1
+        }
+        playSong()
+    }
+
+    //skip to next
+    fun playNext(){
+        songPosition++
+        if(songPosition>=songList.size) {
+            songPosition = 0
+        }
+        playSong()
     }
 }
