@@ -1,6 +1,5 @@
 package com.example.musicplayer
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,7 +27,7 @@ class SongRecyclerAdapter(private val songs: List<Song>): RecyclerView.Adapter<S
 
         init {
             itemView.setOnClickListener {
-                (itemView.context as MainActivity).songPicked(adapterPosition)
+                (itemView.context as MainActivity).musicController.songPicked(adapterPosition)
             }
         }
 

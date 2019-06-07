@@ -14,11 +14,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.musicplayer.model.Song
-import android.content.ComponentName
 import android.content.Context
-import com.example.musicplayer.MusicService.MusicBinder
-import android.os.IBinder
-import android.content.ServiceConnection
 
 
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback{
@@ -37,20 +33,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private lateinit var myRecyclerAdapter: SongRecyclerAdapter
     private lateinit var myRecyclerLayoutManager: LinearLayoutManager
 
-    private lateinit var musicServiceWrapper: MusicServiceWrapper
-
-    //connection to the service
-    private val musicConnection = object : ServiceConnection {
-
-        override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            musicServiceWrapper.connectService((service as MusicBinder).getService(),
-                songList)
-        }
-
-        override fun onServiceDisconnected(name: ComponentName) {
-            musicServiceWrapper.disconnectService()
-        }
-    }
+    lateinit var musicController: MusicController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +42,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         checkForDataReadingPermission()
         queryForMusic()
         setRecyclerView()
-        musicServiceWrapper = MusicServiceWrapper(this)
+        musicController = MusicController(this, songList)
         createNotificationChannel()
     }
 
@@ -70,7 +53,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
         Intent(this, MusicService::class.java).
             also { playIntent ->
-            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE)
+            bindService(playIntent, musicController.serviceConnection, Context.BIND_AUTO_CREATE)
         }
     }
 
@@ -81,8 +64,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     override fun onDestroy() {
         super.onDestroy()
-        unbindService(musicConnection)
-        musicServiceWrapper.disconnectService()
+        unbindService(musicController.serviceConnection)
+        musicController.disconnectService()
     }
 
     private fun checkForDataReadingPermission() {
@@ -166,11 +149,5 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                 // Ignore all other requests.
             }
         }
-    }
-
-    fun songPicked(songIndex: Int) {
-        musicServiceWrapper.myMusicService.setSong(songIndex)
-        musicServiceWrapper.myMusicService.playSong()
-        musicServiceWrapper.show()
     }
 }

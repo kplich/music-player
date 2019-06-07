@@ -1,11 +1,14 @@
 package com.example.musicplayer
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.ServiceConnection
+import android.os.IBinder
 import android.util.AttributeSet
 import android.widget.MediaController
 import com.example.musicplayer.model.Song
 
-class MusicServiceWrapper(context: Context):
+class MusicController(context: Context):
     MediaController.MediaPlayerControl, MediaController(context) {
 
     init {
@@ -16,12 +19,33 @@ class MusicServiceWrapper(context: Context):
         isEnabled = true
     }
 
+    constructor(context: Context, songList: List<Song>): this(context) {
+        this.songList = songList
+    }
+
     companion object {
         private const val AUDIO_SESSION_ID = 17
     }
 
     lateinit var myMusicService: MusicService
     private var isServiceBound: Boolean = false
+    private lateinit var songList: List<Song>
+    val serviceConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            connectService((service as MusicService.MusicBinder).getService(), songList)
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            disconnectService()
+        }
+    }
+
+    fun songPicked(songIndex: Int) {
+        myMusicService.setSong(songIndex)
+        myMusicService.playSong()
+        show()
+    }
 
     override fun hide() {
 
