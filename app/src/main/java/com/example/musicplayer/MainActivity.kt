@@ -19,42 +19,36 @@ import android.content.Context
 import com.example.musicplayer.MusicService.MusicBinder
 import android.os.IBinder
 import android.content.ServiceConnection
-import android.widget.MediaController
 
 
-class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback, MediaController.MediaPlayerControl {
+class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback{
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "NOTIFICATION CHANNEL ID"
 
         private const val TAG: String = "MainActivity"
         private const val NOTIFICATION_CHANNEL_NAME = "PLAYER_CHANNEL"
-        private const val AUDIO_SESSION_ID = 17
     }
     private val myPermissionReadExternalStorage = 23
 
     private lateinit var songList: List<Song>
 
     private lateinit var myRecyclerView: RecyclerView
-    private lateinit var playbackController: MediaController
 
     private lateinit var myRecyclerAdapter: SongRecyclerAdapter
     private lateinit var myRecyclerLayoutManager: LinearLayoutManager
-    private lateinit var myMusicService: MusicService
 
-    private var isServiceBound: Boolean = false
+    private lateinit var musicServiceWrapper: MusicServiceWrapper
+
     //connection to the service
     private val musicConnection = object : ServiceConnection {
 
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
-            //get service
-            myMusicService = (service as MusicBinder).getService()
-            //pass list
-            myMusicService.songList =  songList
-            isServiceBound = true
+            musicServiceWrapper.connectService((service as MusicBinder).getService(),
+                songList)
         }
 
         override fun onServiceDisconnected(name: ComponentName) {
-            isServiceBound = false
+            musicServiceWrapper.disconnectService()
         }
     }
 
@@ -65,7 +59,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         checkForDataReadingPermission()
         queryForMusic()
         setRecyclerView()
-        setPlaybackController()
+        musicServiceWrapper = MusicServiceWrapper(this, null)
         createNotificationChannel()
     }
 
@@ -88,7 +82,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     override fun onDestroy() {
         super.onDestroy()
         unbindService(musicConnection)
-        isServiceBound = false
+        musicServiceWrapper.disconnectService()
     }
 
     private fun checkForDataReadingPermission() {
@@ -142,19 +136,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         }
     }
 
-    private fun setPlaybackController() {
-        playbackController = object : MediaController(this) {
-            override fun hide() {
-
-            }
-        }.apply {
-            setPrevNextListeners({ playNext() }, { playPrev() })
-            setMediaPlayer(this@MainActivity)
-            setAnchorView(this@MainActivity.findViewById(R.id.songsLayout))
-            isEnabled = true
-        }
-    }
-
     private fun createNotificationChannel() {
         val name = NOTIFICATION_CHANNEL_NAME
         val importance = NotificationManager.IMPORTANCE_LOW
@@ -165,18 +146,6 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(mChannel)
 
-    }
-
-    //play next
-    private fun playNext() {
-        myMusicService.playNext()
-        playbackController.show(0)
-    }
-
-    //play previous
-    private fun playPrev() {
-        myMusicService.playPrev()
-        playbackController.show(0)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -200,52 +169,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     }
 
     fun songPicked(songIndex: Int) {
-        myMusicService.setSong(songIndex)
-        myMusicService.playSong()
-        playbackController.show()
-    }
-
-    override fun isPlaying(): Boolean {
-        return if(isServiceBound) myMusicService.isPng() else false
-    }
-
-    override fun canSeekForward(): Boolean {
-        return true
-    }
-
-    override fun getDuration(): Int {
-        return if(isServiceBound && myMusicService.isPng()) myMusicService.getDur() else 0
-    }
-
-    override fun pause() {
-        myMusicService.pausePlayer()
-    }
-
-    override fun getBufferPercentage(): Int {
-        return if(isServiceBound && myMusicService.isPng()) myMusicService.getDur() else 0
-    }
-
-    override fun seekTo(pos: Int) {
-        myMusicService.seek(pos)
-    }
-
-    override fun getCurrentPosition(): Int {
-        return if(isServiceBound && myMusicService.isPng()) myMusicService.getPosn() else 0
-    }
-
-    override fun canSeekBackward(): Boolean {
-        return true
-    }
-
-    override fun start() {
-        myMusicService.go()
-    }
-
-    override fun getAudioSessionId(): Int {
-        return AUDIO_SESSION_ID
-    }
-
-    override fun canPause(): Boolean {
-        return true
+        musicServiceWrapper.myMusicService.setSong(songIndex)
+        musicServiceWrapper.myMusicService.playSong()
+        musicServiceWrapper.show()
     }
 }
