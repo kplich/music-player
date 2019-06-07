@@ -90,6 +90,9 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     override fun onDestroy() {
+        Log.d(TAG, "onDestroy")
+        super.onDestroy()
+        player.release()
         stopForeground(true)
     }
 

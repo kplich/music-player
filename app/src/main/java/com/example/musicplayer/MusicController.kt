@@ -4,7 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.util.AttributeSet
+import android.util.Log
 import android.widget.MediaController
 import com.example.musicplayer.model.Song
 
@@ -12,6 +12,7 @@ class MusicController(context: Context):
     MediaController.MediaPlayerControl, MediaController(context) {
 
     init {
+        Log.d(TAG, "Creating Music Controller")
         setPrevNextListeners({myMusicService.playNext()},
             {myMusicService.playPrev()})
         setAnchorView((context as MainActivity).findViewById(R.id.songsLayout))
@@ -25,14 +26,16 @@ class MusicController(context: Context):
 
     companion object {
         private const val AUDIO_SESSION_ID = 17
+        private const val TAG = "Music Controller"
     }
 
     lateinit var myMusicService: MusicService
     private var isServiceBound: Boolean = false
     private lateinit var songList: List<Song>
-    val serviceConnection = object : ServiceConnection {
 
+    val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            Log.d(TAG, "ServiceConnection::onServiceConnected")
             connectService((service as MusicService.MusicBinder).getService(), songList)
         }
 
