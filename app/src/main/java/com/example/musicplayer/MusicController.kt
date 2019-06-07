@@ -37,6 +37,7 @@ class MusicController(context: Context):
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             Log.d(TAG, "ServiceConnection::onServiceConnected")
             connectService((service as MusicService.MusicBinder).getService(), songList)
+            myMusicService.controller = this@MusicController
         }
 
         override fun onServiceDisconnected(name: ComponentName) {

@@ -22,6 +22,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
 
     lateinit var songList: List<Song>
     private lateinit var player: MediaPlayer
+    lateinit var controller: MusicController
     private var songPosition: Int = 0
     private val binder = MusicBinder()
 
@@ -63,6 +64,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
             .build()
 
         startForeground(PLAYER_NOTIFICATION_ID, notification)
+        controller.show(0)
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
