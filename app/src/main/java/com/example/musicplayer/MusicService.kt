@@ -24,7 +24,6 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     private lateinit var player: MediaPlayer
     private var songPosition: Int = 0
     private val binder = MusicBinder()
-    private var serviceStarted = false
 
     inner class MusicBinder : Binder() {
         fun getService(): MusicService = this@MusicService
@@ -33,6 +32,9 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
 
     override fun onCreate() {
         super.onCreate()
+
+        Log.d(TAG, "onCreate")
+
         player = MediaPlayer().apply {
             setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
             setAudioStreamType(AudioManager.STREAM_MUSIC)
@@ -43,9 +45,9 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     override fun onPrepared(mp: MediaPlayer?) {
-        mp!!.start()
+        Log.d(TAG, "onPrepared")
 
-        Log.d(TAG, "onPrepared: before creating notification")
+        mp!!.start()
 
         val pendingIntent: PendingIntent =
             Intent(this, MainActivity::class.java).let { notificationIntent ->
@@ -61,7 +63,6 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
 
 
         startForeground(PLAYER_NOTIFICATION_ID, notification)
-
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
@@ -70,6 +71,8 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     override fun onCompletion(mp: MediaPlayer?) {
+        Log.d(TAG, "onCompletition")
+
         if(player.currentPosition > 0){
             mp!!.reset()
             playNext()
@@ -91,6 +94,8 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     fun playSong() {
+        Log.d(TAG, "playSong: playing ${songList[songPosition].fileName}")
+
         player.reset()
 
         //get id
@@ -102,7 +107,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
         try {
             player.setDataSource(applicationContext, trackUri)
         } catch (e: Exception) {
-            Log.e("MUSIC SERVICE", "Error setting data source", e)
+            Log.e(TAG, "Error setting data source", e)
         }
 
         player.prepareAsync()
@@ -143,7 +148,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     fun playPrev(){
         songPosition--
         if(songPosition < 0) {
-            songPosition = songList.size-1
+            songPosition = songList.size - 1
         }
         playSong()
     }
@@ -151,7 +156,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     //skip to next
     fun playNext(){
         songPosition++
-        if(songPosition>=songList.size) {
+        if(songPosition >= songList.size) {
             songPosition = 0
         }
         playSong()

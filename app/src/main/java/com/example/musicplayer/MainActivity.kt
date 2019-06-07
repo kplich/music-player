@@ -1,10 +1,8 @@
 package com.example.musicplayer
 
 import android.Manifest
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
@@ -22,7 +20,6 @@ import com.example.musicplayer.MusicService.MusicBinder
 import android.os.IBinder
 import android.content.ServiceConnection
 import android.widget.MediaController
-import androidx.core.app.NotificationCompat
 
 
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback, MediaController.MediaPlayerControl {
@@ -38,7 +35,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private lateinit var songList: List<Song>
 
     private lateinit var myRecyclerView: RecyclerView
-    private lateinit var myMusicController: MusicController
+    private lateinit var playbackController: MediaController
 
     private lateinit var myRecyclerAdapter: SongRecyclerAdapter
     private lateinit var myRecyclerLayoutManager: LinearLayoutManager
@@ -66,19 +63,9 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         setContentView(R.layout.activity_main)
 
         checkForDataReadingPermission()
-
-        songList = queryForMusic()
-
-        myRecyclerLayoutManager = LinearLayoutManager(this)
-        myRecyclerAdapter = SongRecyclerAdapter(songList)
-        myRecyclerView = findViewById<RecyclerView>(R.id.songList).apply {
-            setHasFixedSize(true)
-            layoutManager = myRecyclerLayoutManager
-            adapter = myRecyclerAdapter
-            addItemDecoration(DividerItemDecoration(this.context, DividerItemDecoration.VERTICAL))
-        }
-
-        setMusicController()
+        queryForMusic()
+        setRecyclerView()
+        setPlaybackController()
         createNotificationChannel()
     }
 
@@ -123,8 +110,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         }
     }
 
-    private fun queryForMusic(): List<Song> {
-        val songList: MutableList<Song> = mutableListOf()
+    private fun queryForMusic() {
+        val foundSongs: MutableList<Song> = mutableListOf()
         val musicResolver = contentResolver
         val musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val musicCursor = musicResolver.query(musicUri, null, null, null, null)!!
@@ -137,11 +124,35 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
             do {
                 val thisName = musicCursor.getString(nameColumn)
                 val thisId = musicCursor.getLong(idColumn)
-                songList.add(Song(thisId, thisName))
+                foundSongs.add(Song(thisId, thisName))
             } while (musicCursor.moveToNext())
         }
 
-        return songList.toList()
+        songList = foundSongs.toList()
+    }
+
+    private fun setRecyclerView() {
+        myRecyclerLayoutManager = LinearLayoutManager(this)
+        myRecyclerAdapter = SongRecyclerAdapter(songList)
+        myRecyclerView = findViewById<RecyclerView>(R.id.songList).apply {
+            setHasFixedSize(true)
+            layoutManager = myRecyclerLayoutManager
+            adapter = myRecyclerAdapter
+            addItemDecoration(DividerItemDecoration(this.context, DividerItemDecoration.VERTICAL))
+        }
+    }
+
+    private fun setPlaybackController() {
+        playbackController = object : MediaController(this) {
+            override fun hide() {
+
+            }
+        }.apply {
+            setPrevNextListeners({ playNext() }, { playPrev() })
+            setMediaPlayer(this@MainActivity)
+            setAnchorView(this@MainActivity.findViewById(R.id.songsLayout))
+            isEnabled = true
+        }
     }
 
     private fun createNotificationChannel() {
@@ -156,25 +167,16 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
     }
 
-    private fun setMusicController() {
-        myMusicController = MusicController(this).apply {
-            setPrevNextListeners({ playNext() }, { playPrev() })
-            setMediaPlayer(this@MainActivity)
-            setAnchorView(this@MainActivity.findViewById(R.id.songsLayout))
-            isEnabled = true
-        }
-    }
-
     //play next
     private fun playNext() {
         myMusicService.playNext()
-        myMusicController.show(0)
+        playbackController.show(0)
     }
 
     //play previous
     private fun playPrev() {
         myMusicService.playPrev()
-        myMusicController.show(0)
+        playbackController.show(0)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -200,7 +202,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     fun songPicked(songIndex: Int) {
         myMusicService.setSong(songIndex)
         myMusicService.playSong()
-        myMusicController.show()
+        playbackController.show()
     }
 
     override fun isPlaying(): Boolean {
