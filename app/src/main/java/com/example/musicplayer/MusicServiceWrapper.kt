@@ -5,8 +5,8 @@ import android.util.AttributeSet
 import android.widget.MediaController
 import com.example.musicplayer.model.Song
 
-class MusicServiceWrapper(context: Context, attributes: AttributeSet?):
-    MediaController.MediaPlayerControl, MediaController(context, attributes) {
+class MusicServiceWrapper(context: Context):
+    MediaController.MediaPlayerControl, MediaController(context) {
 
     init {
         setPrevNextListeners({myMusicService.playNext()},
@@ -22,6 +22,10 @@ class MusicServiceWrapper(context: Context, attributes: AttributeSet?):
 
     lateinit var myMusicService: MusicService
     private var isServiceBound: Boolean = false
+
+    override fun hide() {
+
+    }
 
     override fun isPlaying(): Boolean {
         return if(isServiceBound) myMusicService.isPng() else false
