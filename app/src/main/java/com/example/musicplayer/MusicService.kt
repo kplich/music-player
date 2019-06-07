@@ -56,9 +56,9 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
             }
 
         val notification: Notification = Notification.Builder(this, MainActivity.NOTIFICATION_CHANNEL_ID)
-            .setContentTitle(getText(R.string.player_notification_title))
-            .setSmallIcon(R.drawable.icon)
-            .setContentText(songList[songPosition].title)
+            .setContentTitle(songList[songPosition].title)
+            .setSmallIcon(R.drawable.play_icon)
+            .setContentText(songList[songPosition].artist)
             .setContentIntent(pendingIntent)
             .build()
 

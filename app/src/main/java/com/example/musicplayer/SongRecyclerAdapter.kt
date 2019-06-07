@@ -30,10 +30,12 @@ class SongRecyclerAdapter(private val songs: List<Song>): RecyclerView.Adapter<S
             }
         }
 
-        private val songName: TextView = itemView.findViewById(R.id.songName)
+        private val songTitle: TextView = itemView.findViewById(R.id.songTitle)
+        private val songArtist: TextView = itemView.findViewById(R.id.songArtist)
 
         fun bind(song: Song) {
-            songName.text = song.title
+            songTitle.text = song.title
+            songArtist.text = song.artist
         }
 
     }

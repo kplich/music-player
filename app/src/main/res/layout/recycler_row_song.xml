@@ -8,13 +8,23 @@
     <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:id="@+id/songName"
+            android:id="@+id/songTitle"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginEnd="@dimen/default_margin"
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginStart="@dimen/default_margin"
-            android:layout_marginBottom="@dimen/default_margin"
             android:layout_marginTop="@dimen/default_margin"
             app:layout_constraintTop_toTopOf="parent"
-            android:textSize="@dimen/large_text_size" android:textAlignment="center" android:gravity="center"/>
+            android:textSize="@dimen/medium_text_size"
+            android:gravity="center_vertical"/>
+    <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" android:id="@+id/songArtist"
+            app:layout_constraintTop_toBottomOf="@+id/songTitle"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="@dimen/default_margin"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="@dimen/default_margin"
+            android:textSize="@dimen/small_text_size" android:gravity="center_vertical"
+            android:layout_marginBottom="8dp" app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>
