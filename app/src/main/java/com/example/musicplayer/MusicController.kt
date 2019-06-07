@@ -13,8 +13,8 @@ class MusicController(context: Context):
 
     init {
         Log.d(TAG, "Creating Music Controller")
-        setPrevNextListeners({myMusicService.playNext()},
-            {myMusicService.playPrev()})
+        setPrevNextListeners({myMusicService.setNext()},
+            {myMusicService.setPrevious()})
         setAnchorView((context as MainActivity).findViewById(R.id.songsLayout))
         setMediaPlayer(this)
         isEnabled = true
@@ -45,8 +45,11 @@ class MusicController(context: Context):
     }
 
     fun songPicked(songIndex: Int) {
+        Log.d(TAG, "songPicked")
         myMusicService.setSong(songIndex)
-        myMusicService.playSong()
+        myMusicService.prepareSong()
+
+        Log.d(TAG, "songPicked: show()")
         show()
     }
 
@@ -55,7 +58,8 @@ class MusicController(context: Context):
     }
 
     override fun isPlaying(): Boolean {
-        return if(isServiceBound) myMusicService.isPng() else false
+        Log.d(TAG, "isPlaying? ${if(isServiceBound) myMusicService.isPlaying() else false}")
+        return if(isServiceBound) myMusicService.isPlaying() else false
     }
 
     override fun canSeekForward(): Boolean {
@@ -63,15 +67,17 @@ class MusicController(context: Context):
     }
 
     override fun getDuration(): Int {
-        return if(isServiceBound && myMusicService.isPng()) myMusicService.getDur() else 0
+        Log.d(TAG, "getDuration")
+        return if(isServiceBound && myMusicService.isPlaying()) myMusicService.getDuration() else 0
     }
 
     override fun pause() {
+        Log.d(TAG, "pause")
         myMusicService.pausePlayer()
     }
 
     override fun getBufferPercentage(): Int {
-        return if(isServiceBound && myMusicService.isPng()) myMusicService.getDur() else 0
+        return if(isServiceBound && myMusicService.isPlaying()) myMusicService.getDuration() else 0
     }
 
     override fun seekTo(pos: Int) {
@@ -79,7 +85,7 @@ class MusicController(context: Context):
     }
 
     override fun getCurrentPosition(): Int {
-        return if(isServiceBound && myMusicService.isPng()) myMusicService.getPosn() else 0
+        return if(isServiceBound && myMusicService.isPlaying()) myMusicService.getPosition() else 0
     }
 
     override fun canSeekBackward(): Boolean {
@@ -87,7 +93,8 @@ class MusicController(context: Context):
     }
 
     override fun start() {
-        myMusicService.go()
+        Log.d(TAG, "start")
+        myMusicService.start()
     }
 
     override fun getAudioSessionId(): Int {
