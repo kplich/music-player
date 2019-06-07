@@ -2,4 +2,6 @@
     <string name="app_name">Music Player</string>
 
     <string name="player_notification_title">Now playing</string>
+
+    <string name="menu_shuffle_title">Shuffle</string>
 </resources>

@@ -14,7 +14,9 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.content.Context
-
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 
 class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback{
     companion object {
@@ -43,6 +45,21 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         setRecyclerView()
         musicController = MusicController(this, songList)
         createNotificationChannel()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_options, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item!!.itemId) {
+            R.id.menuShuffle -> {
+                musicController.switchShuffle()
+                item.isChecked = !item.isChecked
+            }
+        }
+        return true
     }
 
     override fun onStart() {
@@ -157,5 +174,9 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                 // Ignore all other requests.
             }
         }
+    }
+
+    fun onShuffleMenuItemClicked(view: View) {
+        musicController.switchShuffle()
     }
 }

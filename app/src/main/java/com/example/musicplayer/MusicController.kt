@@ -114,4 +114,8 @@ class MusicController(context: Context):
     fun disconnectService() {
         isServiceBound = false
     }
+
+    fun switchShuffle() {
+        myMusicService.switchShuffle()
+    }
 }

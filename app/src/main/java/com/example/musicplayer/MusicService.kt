@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.content.ContentUris
 import android.util.Log
+import kotlin.random.Random
 
 class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
 
@@ -23,6 +24,7 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     private lateinit var player: MediaPlayer
     lateinit var controller: MusicController
     private var songPosition: Int = 0
+    private var isShuffleOn: Boolean = false
     private val binder = MusicBinder()
 
     inner class MusicBinder : Binder() {
@@ -159,10 +161,21 @@ class MusicService: Service(), MediaPlayer.OnPreparedListener, MediaPlayer.OnErr
     }
 
     fun setNext() {
-        songPosition++
-        if(songPosition >= songList.size) {
-            songPosition = 0
+        if (isShuffleOn) {
+            songPosition = (0 until songList.size).random()
+        }
+        else {
+            songPosition++
+            if (songPosition >= songList.size) {
+                songPosition = 0
+            }
         }
         prepareSong()
     }
+
+    fun switchShuffle() {
+        isShuffleOn = !isShuffleOn
+    }
+
+    fun isShuffleOn() = isShuffleOn
 }
